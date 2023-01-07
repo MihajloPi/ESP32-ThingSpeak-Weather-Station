@@ -117,7 +117,7 @@ void loop() {
             client.println(comfortLevel[comfort - 1]);
             client.println(F("</p>"));
 
-            client.print(F("<p>Forecast: "));
+            client.print(F("<p>12-hour forecast: "));
             client.println(weather.getForecastSeverity(seaLevelPressure, month, "NOW", pressureTrend));
             client.println(F("</p>"));
 
