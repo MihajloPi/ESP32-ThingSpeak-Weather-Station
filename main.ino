@@ -6,7 +6,7 @@
 #include <Adafruit_BMP280.h>
 #include <ThingSpeak.h>
 
-unsigned long sensorTimer, ThingSpeakTimer = 0;
+unsigned long sensorTimer, arrayShiftingTimer, five_minute_jobs = 0;
 
 #define dhtType DHT22
 const byte dhtPin = 19;
@@ -14,6 +14,10 @@ const float altitude = XXX;                      //Set your altitude, necessary 
 float temperature, humidity, seaLevelPressure, heatIndex, dewPoint, lightIntensity, UVindex = 0;
 byte comfort = 1;
 char comfortLevel[7][17] = {"Uncomfortable", "Comfortable", "Some discomfort", "Hot feeling", "Great discomfort", "Dangerous"};
+int pressureData[36];   //Every point of pressure is recorded regularly at a 5 minute interval and the pressure trend is calculated from the 3 hour difference in pressure
+int pressureTrend = 3;
+double pressureDifference = 3.0; //Determines if the pressure is steady, falling or rising. If the pressure now is by 3 hPa greater or less than 3 hours ago, change is recorded, otherwise it is considered to be steady.
+int month = 1;
 
 const char* SSID = "XXXXXXXXXXXX";               //Replace with your own WiFI SSID
 const char* password = "XXXXXXXXXXXX";           //Replace with your WiFi network's password
@@ -113,6 +117,10 @@ void loop() {
             client.println(comfortLevel[comfort - 1]);
             client.println(F("</p>"));
 
+            client.print(F("<p>Forecast: "));
+            client.println(weather.getForecastSeverity(seaLevelPressure, month, "NOW", pressureTrend));
+            client.println(F("</p>"));
+
             client.println(F("</body></html>"));
 
             client.println();
@@ -130,7 +138,15 @@ void loop() {
     client.stop();
   }
 
-  if (millis() - ThingSpeakTimer >= 300000) {       //5 minute update interval
+  if (millis() - five_minute_jobs >= 300000) {       //5 minute update interval
+
+    rightShiftArray(pressureData);
+    pressureData[0] = seaLevelPressure;
+
+    if (pressureData[0] - pressureData[35] > pressureDifference) pressureTrend = 1;
+    else if (pressureData[0] - pressureData[35] < pressureDifference) pressureTrend = 2;
+    else pressureTrend = 3;
+
     ThingSpeak.setField(1, temperature);
     ThingSpeak.setField(2, humidity);
     ThingSpeak.setField(3, seaLevelPressure);
@@ -142,7 +158,7 @@ void loop() {
 
     ThingSpeak.writeFields(channelID, APIkey);
 
-    ThingSpeakTimer = millis();
+    five_minute_jobs = millis();
   }
 }
 
@@ -159,4 +175,11 @@ void WiFiEvent(WiFiEvent_t event) {
 void wifiOnDisconnect() {
   delay(1000);
   WiFi.begin(SSID, password);
+}
+
+void rightShiftArray(int array[]) {
+  int size = sizeof(array) / sizeof(array[0]);
+  for (int i = size - 1; i > 0; i--) {
+    array[i] = array[i - 1];
+  }
 }
