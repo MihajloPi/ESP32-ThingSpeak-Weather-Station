@@ -10,13 +10,12 @@ unsigned long sensorTimer, five_minute_jobs = 0;
 
 #define dhtType DHT22
 const byte dhtPin = 19;
-const float altitude = XXX;                      //Set your altitude, necessary for barometric pressure calculation
-double temperature, humidity, seaLevelPressure, heatIndex, dewPoint, lightIntensity, UVindex = 0;
-byte comfort = 1;
+const float altitude = XXX;                      //Set your altitude, necessary for barometric pressure calculationdouble temperature, humidity, seaLevelPressure, heatIndex, dewPoint, lightIntensity, UVindex = 0;
+byte comfort = 1;                                //Set the correct month! TO BE ADDED A REAL TIME CLOCK!
 char comfortLevel[7][17] = {"Uncomfortable", "Comfortable", "Some discomfort", "Hot feeling", "Great discomfort", "Dangerous"};
-int pressureData[36];   //Every point of pressure is recorded regularly at a 5 minute interval and the pressure trend is calculated from the 3 hour difference in pressure
+int pressureData[36];
 int pressureTrend = 3;
-double pressureDifference = 3.0; //Determines if the pressure is steady, falling or rising. If the pressure now is by 3 hPa greater or less than 3 hours ago, change is recorded, otherwise it is considered to be steady.
+double pressureDifference = 1.5; //Determines if the pressure is steady, falling or rising. If the pressure now is by 3 hPa greater or less than 3 hours ago, change is recorded, otherwise it is considered to be steady.
 int month = 1;
 
 const char* SSID = "XXXXXXXXXXXX";               //Replace with your own WiFI SSID
@@ -64,6 +63,14 @@ void loop() {
     UVindex = uv.readUVI();
     lightIntensity = light.readLightLevel();
 
+    humidity = rounding(humidity, 1);
+    temperature = rounding(temperature, 1);
+    seaLevelPressure = rounding(seaLevelPressure, 1);
+    dewPoint = rounding(dewPoint, 1);
+    heatIndex = rounding(heatIndex, 1);
+    UVindex = rounding(UVindex, 1);
+    lightIntensity = rounding(lightIntensity, 1);
+
     sensorTimer = millis();
   }
 
@@ -96,6 +103,13 @@ void loop() {
             client.print(F("<p>Pressure: "));
             client.print(seaLevelPressure, 1);
             client.println(F(" hPa</p>"));
+
+            client.print(F("<p>Pressure Trend: "));
+            if (pressureTrend = 1) client.print("Rising");
+            else if (pressureTrend = 2) client.print("Falling");
+            else if (pressureTrend = 3) client.print("Steady");
+            else client.print("Invalid!");
+            client.println(F("</p>"));
 
             client.print(F("<p>Dew point: "));
             client.print(dewPoint, 1);
@@ -143,18 +157,18 @@ void loop() {
     rightShiftArray(pressureData);
     pressureData[0] = seaLevelPressure;
 
-    if (pressureData[0] - pressureData[35] > pressureDifference) pressureTrend = 1;
-    else if (pressureData[0] - pressureData[35] < pressureDifference) pressureTrend = 2;
+    if ((pressureData[0] - pressureData[35] > pressureDifference) && pressureData[35] != 0.0) pressureTrend = 1;
+    else if ((pressureData[0] - pressureData[35] < pressureDifference) && pressureData[35] != 0.0) pressureTrend = 2;
     else pressureTrend = 3;
 
-    ThingSpeak.setField(1, temperature);
-    ThingSpeak.setField(2, humidity);
-    ThingSpeak.setField(3, seaLevelPressure);
-    ThingSpeak.setField(4, dewPoint);
-    ThingSpeak.setField(5, heatIndex);
-    ThingSpeak.setField(6, UVindex);
-    ThingSpeak.setField(7, lightIntensity);
-    ThingSpeak.setStatus(comfortLevel[comfort - 1]);
+    ThingSpeak.setField(1, (float)temperature);
+    ThingSpeak.setField(2, (float)humidity);
+    ThingSpeak.setField(3, (float)seaLevelPressure);
+    ThingSpeak.setField(4, (float)dewPoint);
+    ThingSpeak.setField(5, (float)heatIndex);
+    ThingSpeak.setField(6, (float)UVindex);
+    ThingSpeak.setField(7, (float)lightIntensity);
+    ThingSpeak.setStatus(String(weather.getForecastSeverity(seaLevelPressure, month, "NOW", pressureTrend)));
 
     ThingSpeak.writeFields(channelID, APIkey);
 
@@ -182,4 +196,9 @@ void rightShiftArray(int array[]) {
   for (int i = size - 1; i > 0; i--) {
     array[i] = array[i - 1];
   }
+}
+
+double rounding(double number, int decimals) {
+  double factor = pow(10, decimals);
+  return round(number * factor) / factor;
 }
