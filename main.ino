@@ -90,37 +90,37 @@ void loop() {
             //Here goes HTML code
             client.println(F("<!DOCTYPE html><html>"));
             client.println(F("<head><meta charset=\"UTF-8\" name=\"viewport\" content=\"width=device-width, initial-scale=1\"><meta http-equiv=\"refresh\" content=\"2\"></head>"));
-            client.println(F("<body><center><h1>ESP32 Weather Station</h1></center>"));
+            client.println(F("<body><center><h1>ESP32 Weather Station</h1></center><center>"));
 
             client.print(F("<p>Temperature: "));
-            client.print(temperature, 1);
+            client.print(temperature);
             client.println(F(" °C</p>"));
 
             client.print(F("<p>Humidity: "));
-            client.print(humidity, 1);
+            client.print(humidity);
             client.println(F(" %</p>"));
 
             client.print(F("<p>Pressure: "));
-            client.print(seaLevelPressure, 1);
+            client.print(seaLevelPressure);
             client.println(F(" hPa</p>"));
 
             client.print(F("<p>Pressure Trend: "));
-            if (pressureTrend = 1) client.print("Rising");
-            else if (pressureTrend = 2) client.print("Falling");
-            else if (pressureTrend = 3) client.print("Steady");
-            else client.print("Invalid!");
+            if (pressureTrend == 1) client.print(F("Rising"));
+            else if (pressureTrend == 2) client.print(F("Falling"));
+            else if (pressureTrend == 3) client.print(F("Steady"));
+            else client.print(F("Invalid!"));
             client.println(F("</p>"));
 
             client.print(F("<p>Dew Point: "));
-            client.print(dewPoint, 1);
+            client.print(dewPoint);
             client.println(F(" °C</p>"));
 
             client.print(F("<p>Heat Index: "));
-            client.print(heatIndex, 1);
+            client.print(heatIndex);
             client.println(F(" °C</p>"));
 
             client.print(F("<p>UV Index: "));
-            client.println(UVindex, 1);
+            client.println(UVindex);
             client.println(F("</p>"));
 
             client.print(F("<p>Light Intensity: "));
