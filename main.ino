@@ -93,15 +93,15 @@ void loop() {
             client.println(F("<body><center><h1>ESP32 Weather Station</h1></center><center>"));
 
             client.print(F("<p>Temperature: "));
-            client.print(temperature);
+            client.print(temperature, 1);
             client.println(F(" °C</p>"));
 
             client.print(F("<p>Humidity: "));
-            client.print(humidity);
+            client.print(humidity, 1);
             client.println(F(" %</p>"));
 
             client.print(F("<p>Pressure: "));
-            client.print(seaLevelPressure);
+            client.print(seaLevelPressure, 1);
             client.println(F(" hPa</p>"));
 
             client.print(F("<p>Pressure Trend: "));
@@ -112,19 +112,19 @@ void loop() {
             client.println(F("</p>"));
 
             client.print(F("<p>Dew Point: "));
-            client.print(dewPoint);
+            client.print(dewPoint, 1);
             client.println(F(" °C</p>"));
 
             client.print(F("<p>Heat Index: "));
-            client.print(heatIndex);
+            client.print(heatIndex, 1);
             client.println(F(" °C</p>"));
 
             client.print(F("<p>UV Index: "));
-            client.println(UVindex);
+            client.println(UVindex, 1);
             client.println(F("</p>"));
 
             client.print(F("<p>Light Intensity: "));
-            client.print(lightIntensity);
+            client.print(lightIntensity, 1);
             client.println(F(" lux</p>"));
 
             client.print(F("<p>Comfort Level: "));
