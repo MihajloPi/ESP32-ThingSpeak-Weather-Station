@@ -168,7 +168,7 @@ void loop() {
     ThingSpeak.setField(5, (float)heatIndex);
     ThingSpeak.setField(6, (float)UVindex);
     ThingSpeak.setField(7, (float)lightIntensity);
-    ThingSpeak.setStatus(String(weather.getForecastSeverity(seaLevelPressure, month, "NOW", pressureTrend)));
+    ThingSpeak.setStatus(String(weather.getForecast(seaLevelPressure, month, "NOW", pressureTrend)));
 
     ThingSpeak.writeFields(channelID, APIkey);
 
