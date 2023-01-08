@@ -6,7 +6,7 @@
 #include <Adafruit_BMP280.h>
 #include <ThingSpeak.h>
 
-unsigned long sensorTimer, arrayShiftingTimer, five_minute_jobs = 0;
+unsigned long sensorTimer, five_minute_jobs = 0;
 
 #define dhtType DHT22
 const byte dhtPin = 19;
