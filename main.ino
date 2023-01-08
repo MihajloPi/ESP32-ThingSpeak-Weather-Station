@@ -111,7 +111,7 @@ void loop() {
             else client.print("Invalid!");
             client.println(F("</p>"));
 
-            client.print(F("<p>Dew point: "));
+            client.print(F("<p>Dew Point: "));
             client.print(dewPoint, 1);
             client.println(F(" °C</p>"));
 
@@ -119,20 +119,20 @@ void loop() {
             client.print(heatIndex, 1);
             client.println(F(" °C</p>"));
 
-            client.print(F("<p>UV index: "));
+            client.print(F("<p>UV Index: "));
             client.println(UVindex, 1);
             client.println(F("</p>"));
 
-            client.print(F("<p>Light intensity: "));
+            client.print(F("<p>Light Intensity: "));
             client.print(lightIntensity);
             client.println(F(" lux</p>"));
 
-            client.print(F("<p>Comfort: "));
+            client.print(F("<p>Comfort Level: "));
             client.println(comfortLevel[comfort - 1]);
             client.println(F("</p>"));
 
-            client.print(F("<p>12-hour forecast: "));
-            client.println(weather.getForecastSeverity(seaLevelPressure, month, "NOW", pressureTrend));
+            client.print(F("<p>12-hour Forecast: "));
+            client.println(weather.getForecast(seaLevelPressure, month, "NOW", pressureTrend));
             client.println(F("</p>"));
 
             client.println(F("</body></html>"));
@@ -157,8 +157,8 @@ void loop() {
     rightShiftArray(pressureData);
     pressureData[0] = seaLevelPressure;
 
-    if ((pressureData[0] - pressureData[35] > pressureDifference) && pressureData[35] != 0.0) pressureTrend = 1;
-    else if ((pressureData[0] - pressureData[35] < pressureDifference) && pressureData[35] != 0.0) pressureTrend = 2;
+    if ((pressureData[0] - pressureData[35] > pressureDifference) && (pressureData[35] != 0.0) && (pressureData[0] != 0.0)) pressureTrend = 1;
+    else if ((pressureData[0] - pressureData[35] < pressureDifference) && (pressureData[35] != 0.0) && (pressureData[0] != 0.0)) pressureTrend = 2;
     else pressureTrend = 3;
 
     ThingSpeak.setField(1, (float)temperature);
@@ -181,6 +181,9 @@ void WiFiEvent(WiFiEvent_t event) {
     case SYSTEM_EVENT_STA_DISCONNECTED:
       wifiOnDisconnect();
       break;
+    //    case SYSTEM_EVENT_STA_CONNECTED:
+    //      WiFi.enableIpV6();                  //Enable IPv6 support for ESP32
+    //      break;
     default:
       break;
   }
