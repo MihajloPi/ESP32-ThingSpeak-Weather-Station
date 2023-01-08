@@ -11,7 +11,7 @@ unsigned long sensorTimer, arrayShiftingTimer, five_minute_jobs = 0;
 #define dhtType DHT22
 const byte dhtPin = 19;
 const float altitude = XXX;                      //Set your altitude, necessary for barometric pressure calculation
-float temperature, humidity, seaLevelPressure, heatIndex, dewPoint, lightIntensity, UVindex = 0;
+double temperature, humidity, seaLevelPressure, heatIndex, dewPoint, lightIntensity, UVindex = 0;
 byte comfort = 1;
 char comfortLevel[7][17] = {"Uncomfortable", "Comfortable", "Some discomfort", "Hot feeling", "Great discomfort", "Dangerous"};
 int pressureData[36];   //Every point of pressure is recorded regularly at a 5 minute interval and the pressure trend is calculated from the 3 hour difference in pressure
