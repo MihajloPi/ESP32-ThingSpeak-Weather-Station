@@ -87,7 +87,7 @@ void loop() {
             client.println(F("Connection: close"));
             client.println();
 
-            //Here goes HTML code
+            //Here goes the HTML code
             client.println(F("<!DOCTYPE html><html>"));
             client.println(F("<head><meta charset=\"UTF-8\" name=\"viewport\" content=\"width=device-width, initial-scale=1\"><meta http-equiv=\"refresh\" content=\"2\"></head>"));
             client.println(F("<body><center><h1>ESP32 Weather Station</h1></center><center>"));
@@ -105,10 +105,18 @@ void loop() {
             client.println(F(" hPa</p>"));
 
             client.print(F("<p>Pressure Trend: "));
-            if (pressureTrend == 1) client.print(F("Rising"));
-            else if (pressureTrend == 2) client.print(F("Falling"));
-            else if (pressureTrend == 3) client.print(F("Steady"));
-            else client.print(F("Invalid!"));
+            if (pressureTrend == 1) {
+              client.print(F("Rising"));
+            }
+            else if (pressureTrend == 2) {
+              client.print(F("Falling"));
+            }
+            else if (pressureTrend == 3) {
+              client.print(F("Steady"));
+            }
+            else {
+              client.print(F("Invalid!"));
+            }
             client.println(F("</p>"));
 
             client.print(F("<p>Dew Point: "));
@@ -157,9 +165,15 @@ void loop() {
     rightShiftArray(pressureData);
     pressureData[0] = seaLevelPressure;
 
-    if ((pressureData[0] - pressureData[35] > pressureDifference) && (pressureData[35] != 0.0) && (pressureData[0] != 0.0)) pressureTrend = 1;
-    else if ((pressureData[0] - pressureData[35] < pressureDifference) && (pressureData[35] != 0.0) && (pressureData[0] != 0.0)) pressureTrend = 2;
-    else pressureTrend = 3;
+    if ((pressureData[0] - pressureData[35] > pressureDifference) && (pressureData[35] != 0.0) && (pressureData[0] != 0.0)) {
+      pressureTrend = 1;
+    }
+    else if ((pressureData[0] - pressureData[35] < -1*pressureDifference) && (pressureData[35] != 0.0) && (pressureData[0] != 0.0)) {
+      pressureTrend = 2;
+    }
+    else {
+      pressureTrend = 3;
+    }
 
     ThingSpeak.setField(1, (float)temperature);
     ThingSpeak.setField(2, (float)humidity);
