@@ -13,7 +13,7 @@ const byte dhtPin = 19;
 const double altitude = XXX;                     //Set your altitude, necessary for barometric pressure calculationdouble temperature, humidity, seaLevelPressure, heatIndex, dewPoint, lightIntensity, UVindex = 0;
 byte comfort = 1;                                //Set the correct month! TO BE ADDED A REAL TIME CLOCK!
 char comfortLevel[7][17] = {"Uncomfortable", "Comfortable", "Some discomfort", "Hot feeling", "Great discomfort", "Dangerous"};
-int pressureData[36];
+double pressureData[36];
 int pressureTrend = 3;
 double pressureDifference = 1.5; //Determines if the pressure is steady, falling or rising. If the pressure now is by 3 hPa greater or less than 3 hours ago, change is recorded, otherwise it is considered to be steady.
 int month = 1;
@@ -168,7 +168,7 @@ void loop() {
     if ((pressureData[0] - pressureData[35] > pressureDifference) && (pressureData[35] != 0.0) && (pressureData[0] != 0.0)) {
       pressureTrend = 1;
     }
-    else if ((pressureData[0] - pressureData[35] < -1*pressureDifference) && (pressureData[35] != 0.0) && (pressureData[0] != 0.0)) {
+    else if ((pressureData[0] - pressureData[35] < -1 * pressureDifference) && (pressureData[35] != 0.0) && (pressureData[0] != 0.0)) {
       pressureTrend = 2;
     }
     else {
@@ -208,7 +208,7 @@ void wifiOnDisconnect() {
   WiFi.begin(SSID, password);
 }
 
-void rightShiftArray(int array[]) {
+void rightShiftArray(double array[]) {
   int size = sizeof(array) / sizeof(array[0]);
   for (int i = size - 1; i > 0; i--) {
     array[i] = array[i - 1];
