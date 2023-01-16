@@ -15,8 +15,8 @@ byte comfort = 1;                                //Set the correct month! TO BE 
 char comfortLevel[7][17] = {"Uncomfortable", "Comfortable", "Some discomfort", "Hot feeling", "Great discomfort", "Dangerous"};
 double pressureData[36];
 int pressureTrend = 3;
-double pressureDifference = 1.5; //Determines if the pressure is steady, falling or rising. If the pressure now is by 3 hPa greater or less than 3 hours ago, change is recorded, otherwise it is considered to be steady.
-int month = 1;
+double pressureDifference = 1.5;  //Determines if the pressure is steady, falling or rising. If the pressure now is by 1.5 hPa greater or less than 3 hours ago, change is recorded, otherwise it is considered to be steady.
+int month = 1;                    //Currently it's January
 
 const char* SSID = "XXXXXXXXXXXX";               //Replace with your own WiFI SSID
 const char* password = "XXXXXXXXXXXX";           //Replace with your WiFi network's password
@@ -165,10 +165,10 @@ void loop() {
     rightShiftArray(pressureData);
     pressureData[0] = seaLevelPressure;
 
-    if ((pressureData[0] - pressureData[35] > pressureDifference) && (pressureData[35] != 0.0) && (pressureData[0] != 0.0)) {
+    if ((pressureData[0] - pressureData[35] >= pressureDifference) && (pressureData[35] != 0.0) && (pressureData[0] != 0.0)) {
       pressureTrend = 1;
     }
-    else if ((pressureData[0] - pressureData[35] < -1 * pressureDifference) && (pressureData[35] != 0.0) && (pressureData[0] != 0.0)) {
+    else if ((pressureData[0] - pressureData[35] <= -1 * pressureDifference) && (pressureData[35] != 0.0) && (pressureData[0] != 0.0)) {
       pressureTrend = 2;
     }
     else {
