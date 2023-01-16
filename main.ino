@@ -162,7 +162,7 @@ void loop() {
 
   if (millis() - five_minute_jobs >= 300000) {       //5 minute update interval
 
-    rightShiftArray(pressureData);
+    rightShiftArray(pressureData, sizeof(pressureData) / sizeof(pressureData[0]));
     pressureData[0] = seaLevelPressure;
 
     if ((pressureData[0] - pressureData[35] >= pressureDifference) && (pressureData[35] != 0.0) && (pressureData[0] != 0.0)) {
@@ -208,14 +208,13 @@ void wifiOnDisconnect() {
   WiFi.begin(SSID, password);
 }
 
-void rightShiftArray(double array[]) {
-  int size = sizeof(array) / sizeof(array[0]);
+void rightShiftArray(double array[], const int size) {
   for (int i = size - 1; i > 0; i--) {
     array[i] = array[i - 1];
   }
 }
 
-double rounding(double number, int decimals) {
+double rounding(const double number, const int decimals) {
   double factor = pow(10, decimals);
   return round(number * factor) / factor;
 }
