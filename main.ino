@@ -181,10 +181,10 @@ void loop() {
     rightShiftArray(pressureData, sizeof(pressureData) / sizeof(pressureData[0]));
     pressureData[0] = seaLevelPressure;
 
-    if ((pressureData[0] - pressureData[35] > pressureDifference) && (pressureData[35] != 0.0) && (pressureData[0] != 0.0)) {
+    if ((pressureData[0] - pressureData[35] >= pressureDifference) && (pressureData[35] != 0.0) && (pressureData[0] != 0.0)) {
       pressureTrend = 1;
     }
-    else if ((pressureData[0] - pressureData[35] < -1 * pressureDifference) && (pressureData[35] != 0.0) && (pressureData[0] != 0.0)) {
+    else if ((pressureData[0] - pressureData[35] <= -1 * pressureDifference) && (pressureData[35] != 0.0) && (pressureData[0] != 0.0)) {
       pressureTrend = 2;
     }
     else {
