@@ -119,6 +119,22 @@ void loop() {
             }
             client.println(F("</p>"));
 
+            client.print(F("<p>Pressure 3 Hours Ago: "));
+            client.print(pressureData[35], 1);
+            client.println(F(" hPa</p>"));
+
+            client.print(F("<p>Pressure 6 Hours Ago: "));
+            client.print(pressureData[71], 1);
+            client.println(F(" hPa</p>"));
+
+            client.print(F("<p>Pressure 12 Hours Ago: "));
+            client.print(pressureData[143], 1);
+            client.println(F(" hPa</p>"));
+
+            client.print(F("<p>Pressure 24 Hours Ago: "));
+            client.print(pressureData[287], 1);
+            client.println(F(" hPa</p>"));
+
             client.print(F("<p>Dew Point: "));
             client.print(dewPoint, 1);
             client.println(F(" °C</p>"));
@@ -165,10 +181,10 @@ void loop() {
     rightShiftArray(pressureData, sizeof(pressureData) / sizeof(pressureData[0]));
     pressureData[0] = seaLevelPressure;
 
-    if ((pressureData[0] - pressureData[35] >= pressureDifference) && (pressureData[35] != 0.0) && (pressureData[0] != 0.0)) {
+    if ((pressureData[0] - pressureData[35] > pressureDifference) && (pressureData[35] != 0.0) && (pressureData[0] != 0.0)) {
       pressureTrend = 1;
     }
-    else if ((pressureData[0] - pressureData[35] <= -1 * pressureDifference) && (pressureData[35] != 0.0) && (pressureData[0] != 0.0)) {
+    else if ((pressureData[0] - pressureData[35] < -1 * pressureDifference) && (pressureData[35] != 0.0) && (pressureData[0] != 0.0)) {
       pressureTrend = 2;
     }
     else {
