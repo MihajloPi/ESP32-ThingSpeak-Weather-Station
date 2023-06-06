@@ -14,7 +14,7 @@ const double altitude = XXX;                     //Set your altitude, necessary 
 double temperature, humidity, seaLevelPressure, heatIndex, dewPoint, lightIntensity, UVindex = 0;
 byte comfort = 1;                                //Set the correct month! TO BE ADDED A REAL TIME CLOCK!
 char comfortLevel[7][17] = {"Uncomfortable", "Comfortable", "Some discomfort", "Hot feeling", "Great discomfort", "Dangerous"};
-double pressureData[36];
+double pressureData[288];
 int pressureTrend = 3;
 double pressureDifference = 1.5;  //Determines if the pressure is steady, falling or rising. If the pressure now is by 1.5 hPa greater or less than 3 hours ago, change is recorded, otherwise it is considered to be steady.
 int month = 1;                    //Currently it's January
