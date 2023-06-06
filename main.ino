@@ -10,7 +10,8 @@ unsigned long sensorTimer, five_minute_jobs = 0;
 
 #define dhtType DHT22
 const byte dhtPin = 19;
-const double altitude = XXX;                     //Set your altitude, necessary for barometric pressure calculationdouble temperature, humidity, seaLevelPressure, heatIndex, dewPoint, lightIntensity, UVindex = 0;
+const double altitude = XXX;                     //Set your altitude, necessary for barometric pressure calculation
+double temperature, humidity, seaLevelPressure, heatIndex, dewPoint, lightIntensity, UVindex = 0;
 byte comfort = 1;                                //Set the correct month! TO BE ADDED A REAL TIME CLOCK!
 char comfortLevel[7][17] = {"Uncomfortable", "Comfortable", "Some discomfort", "Hot feeling", "Great discomfort", "Dangerous"};
 double pressureData[36];
