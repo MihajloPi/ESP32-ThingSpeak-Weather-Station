@@ -6,13 +6,13 @@
 #include "PMS7003-SOLDERED.h"
 #include <ThingSpeak.h>
 
-unsigned long sensorTimer, five_minute_jobs = 0;
+unsigned long two_second_jobs = 0, ten_second_jobs = 0, five_minute_jobs = 0;
 
 const byte dhtPin = 19;
 const byte pollutants_TX = 18;
 const byte pollutants_RX = 19;
 const double altitude = XXX;  //Set your altitude, necessary for barometric pressure calculation
-double temperature, humidity, seaLevelPressure, gas, heatIndex, dewPoint, lightIntensity, UVindex = 0;
+double temperature = 0, humidity = 0, seaLevelPressure = 0, gas = 0, heatIndex = 0, dewPoint = 0, lightIntensity = 0, UVindex = 0;
 int PM01, PM25, PM10, AQI;
 byte comfort = 1;             //Set the correct month! TO BE ADDED A REAL TIME CLOCK!
 char comfortLevel[7][17] = { "Uncomfortable", "Comfortable", "Some discomfort", "Hot feeling", "Great discomfort", "Dangerous" };
@@ -36,14 +36,13 @@ Weather weather;
 
 void setup() {
   bme.begin();
-
   /* Default settings from datasheet. */
   // Set up oversampling and filter initialization
   bme.setTemperatureOversampling(BME680_OS_8X);
   bme.setHumidityOversampling(BME680_OS_2X);
   bme.setPressureOversampling(BME680_OS_4X);
   bme.setIIRFilterSize(BME680_FILTER_SIZE_3);
-  bme.setGasHeater(320, 150); // 320*C for 150 ms
+  bme.setGasHeater(320, 150);  // 320*C for 150 ms
 
   pollutants.begin();
   uv.begin();
@@ -59,9 +58,19 @@ void setup() {
 }
 
 void loop() {
-  if (millis() - sensorTimer >= 2000) {
-    bme.performReading();
+  if (millis() - ten_second_jobs >= 10000) {
     pollutants.read();
+
+    PM01 = pollutants.pm01;
+    PM25 = pollutants.pm25;
+    PM10 = pollutants.pm10;
+    AQI = weather.getAQI(PM25, PM10);
+
+    ten_second_jobs = millis();
+  }
+
+  if (millis() - two_second_jobs >= 2000) {
+    bme.performReading();
 
     temperature = bme.temperature;
     humidity = bme.humidity;
@@ -73,11 +82,6 @@ void loop() {
     UVindex = uv.readUVI();
     lightIntensity = light.readLightLevel();
 
-    PM01 = pollutants.pm01;
-    PM25 = pollutants.pm25;
-    PM10 = pollutants.pm10;
-    AQI = weather.getAQI(PM25, PM10);
-
     humidity = rounding(humidity, 1);
     temperature = rounding(temperature, 1);
     seaLevelPressure = rounding(seaLevelPressure, 1);
@@ -87,7 +91,7 @@ void loop() {
     UVindex = rounding(UVindex, 1);
     lightIntensity = rounding(lightIntensity, 1);
 
-    sensorTimer = millis();
+    two_second_jobs = millis();
   }
 
   WiFiClient client = server.available();
@@ -241,7 +245,7 @@ void WiFiEvent(WiFiEvent_t event) {
       wifiOnDisconnect();
       break;
     case SYSTEM_EVENT_STA_CONNECTED:
-      WiFi.enableIpV6();                  //Enable IPv6 support for ESP32
+      WiFi.enableIpV6();  //Enable IPv6 support for ESP32
       break;
     default:
       break;
