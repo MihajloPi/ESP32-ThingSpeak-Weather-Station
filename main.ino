@@ -2,13 +2,12 @@
 #include <BH1750.h>
 #include <Adafruit_VEML6075.h>
 #include <WeatherCalculations.h>
-#include "Adafruit_BME680.h"
-#include "PMS7003-SOLDERED.h"
+#include <Adafruit_BME680.h>
+#include <PMS7003-SOLDERED.h>
 #include <ThingSpeak.h>
 
 unsigned long two_second_jobs = 0, ten_second_jobs = 0, five_minute_jobs = 0;
 
-const byte dhtPin = 19;
 const byte pollutants_TX = 18;
 const byte pollutants_RX = 19;
 const double altitude = XXX;  //Set your altitude, necessary for barometric pressure calculation
@@ -19,7 +18,7 @@ char comfortLevel[7][17] = { "Uncomfortable", "Comfortable", "Some discomfort", 
 double pressureData[288];
 int pressureTrend = 3;
 double pressureDifference = 0.5;  //Determines if the pressure is steady, falling or rising. If the pressure now is by 1.5 hPa greater or less than 3 hours ago, change is recorded, otherwise it is considered to be steady.
-int month = 6;                    //Currently it's June
+int month = 9;                    //Currently it's September
 
 const char* SSID = "XXXXXXXXXXXX";               //Replace with your own WiFI SSID
 const char* password = "XXXXXXXXXXXX";           //Replace with your WiFi network's password
