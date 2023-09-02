@@ -171,16 +171,16 @@ void loop() {
             client.print(gas, 1);
             client.println(F(" kOhms</p>"));
 
-            client.print(F("<p>PM1: "));
-            client.print(PM01);
+            client.print(F("<p>PM10: "));
+            client.print(PM10);
             client.println(F(" ug/m3</p>"));
 
             client.print(F("<p>PM2.5: "));
             client.print(PM25);
             client.println(F(" ug/m3</p>"));
 
-            client.print(F("<p>PM10: "));
-            client.print(PM10);
+            client.print(F("<p>PM1: "));
+            client.print(PM01);
             client.println(F(" ug/m3</p>"));
 
             client.print(F("<p>AQI: "));
