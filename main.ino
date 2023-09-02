@@ -119,10 +119,6 @@ void loop() {
             client.print(humidity, 1);
             client.println(F(" %</p>"));
 
-            client.print(F("<p>Gas: "));
-            client.print(gas, 1);
-            client.println(F(" kOhms</p>"));
-
             client.print(F("<p>Pressure: "));
             client.print(seaLevelPressure, 1);
             client.println(F(" hPa</p>"));
@@ -170,6 +166,10 @@ void loop() {
             client.print(F("<p>Light Intensity: "));
             client.print(lightIntensity, 1);
             client.println(F(" lux</p>"));
+
+            client.print(F("<p>Gas: "));
+            client.print(gas, 1);
+            client.println(F(" kOhms</p>"));
 
             client.print(F("<p>PM1: "));
             client.print(PM01);
