@@ -1,3 +1,4 @@
+#include <ArduinoOTA.h>
 #include <WiFi.h>
 #include <BH1750.h>
 #include <Adafruit_VEML6075.h>
@@ -8,17 +9,16 @@
 
 unsigned long two_second_jobs = 0, ten_second_jobs = 0, five_minute_jobs = 0;
 
-const byte pollutants_TX = 18;
-const byte pollutants_RX = 19;
-const double altitude = XXX;  //Set your altitude, necessary for barometric pressure calculation
+const uint8_t pollutants_TX = 18;
+const uint8_t pollutants_RX = 19;
 double temperature = 0, humidity = 0, seaLevelPressure = 0, gas = 0, heatIndex = 0, dewPoint = 0, lightIntensity = 0, UVindex = 0;
-int PM01, PM25, PM10, AQI;
-byte comfort = 1;             //Set the correct month! TO BE ADDED A REAL TIME CLOCK!
+uint16_t PM01 = 0, PM25 = 0, PM10 = 0, AQI = 0;
+uint8_t comfort = 1;
 char comfortLevel[7][17] = { "Uncomfortable", "Comfortable", "Some discomfort", "Hot feeling", "Great discomfort", "Dangerous" };
 double pressureData[288];
-int pressureTrend = 3;
+uint8_t pressureTrend = 3;            //Stable pressure
 double pressureDifference = 0.5;  //Determines if the pressure is steady, falling or rising. If the pressure now is by 1.5 hPa greater or less than 3 hours ago, change is recorded, otherwise it is considered to be steady.
-int month = 9;                    //Currently it's September
+uint8_t month = 12;                   //Set the correct month! TO BE ADDED A REAL TIME CLOCK! Currently it's December
 
 const char* SSID = "XXXXXXXXXXXX";               //Replace with your own WiFI SSID
 const char* password = "XXXXXXXXXXXX";           //Replace with your WiFi network's password
@@ -34,6 +34,7 @@ BH1750 light;
 Weather weather;
 
 void setup() {
+  Serial.println("Booting");
   bme.begin();
   /* Default settings from datasheet. */
   // Set up oversampling and filter initialization
@@ -41,7 +42,7 @@ void setup() {
   bme.setHumidityOversampling(BME680_OS_2X);
   bme.setPressureOversampling(BME680_OS_4X);
   bme.setIIRFilterSize(BME680_FILTER_SIZE_3);
-  bme.setGasHeater(320, 150);  // 320*C for 150 ms
+  bme.setGasHeater(320, 150);                       // 320*C for 150 ms
 
   pollutants.begin();
   uv.begin();
@@ -52,11 +53,45 @@ void setup() {
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
   }
+
+  ArduinoOTA
+    .onStart([]() {
+      String type;
+      if (ArduinoOTA.getCommand() == U_FLASH)
+        type = "sketch";
+      else                                                // U_SPIFFS
+        type = "filesystem";
+                                                          // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
+      Serial.println("Start updating " + type);
+    })
+    .onEnd([]() {
+      Serial.println("\nEnd");
+    })
+    .onProgress([](unsigned int progress, unsigned int total) {
+      Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+    })
+    .onError([](ota_error_t error) {
+      Serial.printf("Error[%u]: ", error);
+      if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
+      else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
+      else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
+      else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
+      else if (error == OTA_END_ERROR) Serial.println("End Failed");
+    });
+
+  ArduinoOTA.begin();
+  
+  Serial.println("Ready");
+  Serial.print("IP address: ");
+  Serial.println(WiFi.localIP());
+
   server.begin();
   ThingSpeak.begin(client);
 }
 
 void loop() {
+  ArduinoOTA.handle();  
+
   if (millis() - ten_second_jobs >= 10000) {
     pollutants.read();
 
@@ -76,7 +111,8 @@ void loop() {
     seaLevelPressure = weather.getSeaLevelPressure(bme.pressure / 100.0, altitude);
     gas = bme.gas_resistance / 1000.0;
     dewPoint = weather.getDewPoint(temperature, humidity);
-    heatIndex = weather.getHeatIndex(temperature, humidity);
+    if (temperature >= 25.0) heatIndex = weather.getHeatIndex(temperature, humidity);
+    else heatIndex = temperature;
     comfort = weather.getComfort(heatIndex);
     UVindex = uv.readUVI();
     lightIntensity = light.readLightLevel();
@@ -108,7 +144,7 @@ void loop() {
 
             //Here goes the HTML code
             client.println(F("<!DOCTYPE html><html>"));
-            client.println(F("<head><meta charset=\"UTF-8\" name=\"viewport\" content=\"width=device-width, initial-scale=1\"><meta http-equiv=\"refresh\" content=\"2\"><title>ESP32 Weather Station</title></head>"));
+            client.println(F("<head><meta charset=\"UTF-8\" name=\"viewport\" content=\"width=device-width, initial-scale=1\"><meta http-equiv=\"refresh\" content=\"60\"><title>ESP32 Weather Station</title></head>"));
             client.println(F("<body><center><h1>ESP32 Weather Station</h1></center><center>"));
 
             client.print(F("<p>Temperature: "));
@@ -192,7 +228,7 @@ void loop() {
             client.println(F("</p>"));
 
             client.print(F("<p>12-hour Forecast: "));
-            client.println(weather.getForecast(seaLevelPressure, month, "NOW", pressureTrend));
+            client.println(weather.getForecast(seaLevelPressure, month, Weather::NOW, pressureTrend));
             client.println(F("</p>"));
 
             client.println(F("</body></html>"));
@@ -230,8 +266,9 @@ void loop() {
     ThingSpeak.setField(5, (float)heatIndex);
     ThingSpeak.setField(6, (float)UVindex);
     ThingSpeak.setField(7, (float)lightIntensity);
-    ThingSpeak.setStatus(String(weather.getForecast(seaLevelPressure, month, "NOW", pressureTrend)));
-
+    ThingSpeak.setField(8, (float)AQI);
+    ThingSpeak.setStatus(String(weather.getForecast(seaLevelPressure, month, Weather::NOW, pressureTrend)));      //Weather::NOW is accessing WindDirection map inside WeatherCalculations library
+                                                                                                                  //NOW is abbreviation from "NO Wind"
     ThingSpeak.writeFields(channelID, APIkey);
 
     five_minute_jobs = millis();
