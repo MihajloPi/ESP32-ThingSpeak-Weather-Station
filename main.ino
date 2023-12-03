@@ -13,17 +13,28 @@ const uint8_t pollutants_TX = 18;
 const uint8_t pollutants_RX = 19;
 double temperature = 0, humidity = 0, seaLevelPressure = 0, gas = 0, heatIndex = 0, dewPoint = 0, lightIntensity = 0, UVindex = 0;
 uint16_t PM01 = 0, PM25 = 0, PM10 = 0, AQI = 0;
-uint8_t comfort = 1;
-char comfortLevel[7][17] = { "Uncomfortable", "Comfortable", "Some discomfort", "Hot feeling", "Great discomfort", "Dangerous" };
-double pressureData[288];
-uint8_t pressureTrend = 3;            //Stable pressure
-double pressureDifference = 0.5;  //Determines if the pressure is steady, falling or rising. If the pressure now is by 1.5 hPa greater or less than 3 hours ago, change is recorded, otherwise it is considered to be steady.
-uint8_t month = 12;                   //Set the correct month! TO BE ADDED A REAL TIME CLOCK! Currently it's December
+Weather::Comfort comfort = Weather::comfortable;
+std::map<Weather::Comfort, String> comfortLevel = {
+  { Weather::uncomfortable, "Uncomfortable" },
+  { Weather::comfortable, "Comfortable" },
+  { Weather::small_discomfort, "Some discomfort" },
+  { Weather::medium_discomfort, "Hot feeling" },
+  { Weather::great_discomfort, "Great discomfort" },
+  { Weather::dangerous, "Dangerous" }
+};
 
-const char* SSID = "XXXXXXXXXXXX";               //Replace with your own WiFI SSID
-const char* password = "XXXXXXXXXXXX";           //Replace with your WiFi network's password
-const unsigned long channelID = XXXXXX;          //Replace with your ThingSpeak channel's ID
-const char* APIkey = "XXXXXXXXXXXX";             //Replace with your ThingSpeak API key
+double pressureData[288];
+Weather::PressureTrend pressureTrend = Weather::steady;  //Stable pressure
+const double pressureDifference = 0.5;                   //Determines if the pressure is steady, falling or rising. If the pressure now is by 1.5 hPa greater or less than 3 hours ago, change is recorded, otherwise it is considered to be steady.
+const uint8_t month = 6;                                 //Set the correct month! TO BE ADDED A REAL TIME CLOCK! Currently it's December
+
+const double altitude = XXX;                             //Set your altitude, necessary for barometric pressure calculation
+const char* SSID = "XXXXXXXXXXXX";                       //Replace with your own WiFI SSID
+const char* password = "XXXXXXXXXXXX";                   //Replace with your WiFi network's password
+const unsigned long channelID = XXXXXXXXXXXX;            //Replace with your ThingSpeak channel's ID
+const char* APIkey = "XXXXXXXXXXXX";                     //Replace with your ThingSpeak API key
+const char* OTApassword = "admin";                       //Recommended to change OTA password, default is "admin"
+const char* WXStationHostname = "esp32-wxstation";       //Hostname for ESP32, change if you want
 
 WiFiServer server(80);
 WiFiClient client;
@@ -42,7 +53,7 @@ void setup() {
   bme.setHumidityOversampling(BME680_OS_2X);
   bme.setPressureOversampling(BME680_OS_4X);
   bme.setIIRFilterSize(BME680_FILTER_SIZE_3);
-  bme.setGasHeater(320, 150);                       // 320*C for 150 ms
+  bme.setGasHeater(320, 150);  // 320*C for 150 ms
 
   pollutants.begin();
   uv.begin();
@@ -54,14 +65,16 @@ void setup() {
     delay(500);
   }
 
+  ArduinoOTA.setPassword(OTApassword);
+  ArduinoOTA.setHostname(WXStationHostname);
   ArduinoOTA
     .onStart([]() {
       String type;
       if (ArduinoOTA.getCommand() == U_FLASH)
         type = "sketch";
-      else                                                // U_SPIFFS
+      else  // U_SPIFFS
         type = "filesystem";
-                                                          // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
+      // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
       Serial.println("Start updating " + type);
     })
     .onEnd([]() {
@@ -80,7 +93,7 @@ void setup() {
     });
 
   ArduinoOTA.begin();
-  
+
   Serial.println("Ready");
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
@@ -90,7 +103,7 @@ void setup() {
 }
 
 void loop() {
-  ArduinoOTA.handle();  
+  ArduinoOTA.handle();
 
   if (millis() - ten_second_jobs >= 10000) {
     pollutants.read();
@@ -108,8 +121,8 @@ void loop() {
 
     temperature = bme.temperature;
     humidity = bme.humidity;
-    seaLevelPressure = weather.getSeaLevelPressure(bme.pressure / 100.0, altitude);
-    gas = bme.gas_resistance / 1000.0;
+    seaLevelPressure = weather.getSeaLevelPressure(bme.pressure * 0.01, altitude);
+    gas = bme.gas_resistance * 0.001;  //Multiply by 1e-3 to get in kOhms
     dewPoint = weather.getDewPoint(temperature, humidity);
     if (temperature >= 25.0) heatIndex = weather.getHeatIndex(temperature, humidity);
     else heatIndex = temperature;
@@ -160,11 +173,11 @@ void loop() {
             client.println(F(" hPa</p>"));
 
             client.print(F("<p>Pressure Trend: "));
-            if (pressureTrend == 1) {
+            if (pressureTrend == Weather::rising) {
               client.print(F("Rising"));
-            } else if (pressureTrend == 2) {
+            } else if (pressureTrend == Weather::falling) {
               client.print(F("Falling"));
-            } else if (pressureTrend == 3) {
+            } else if (pressureTrend == Weather::steady) {
               client.print(F("Steady"));
             } else {
               client.print(F("Invalid!"));
@@ -224,7 +237,8 @@ void loop() {
             client.println(F("</p>"));
 
             client.print(F("<p>Comfort Level: "));
-            client.println(comfortLevel[comfort - 1]);
+            //client.println(comfortLevel[comfort - 1]);
+            client.println(comfortLevel[comfort]);
             client.println(F("</p>"));
 
             client.print(F("<p>12-hour Forecast: "));
@@ -252,11 +266,11 @@ void loop() {
     pressureData[0] = seaLevelPressure;
 
     if ((pressureData[0] - pressureData[35] >= pressureDifference) && (pressureData[35] != 0.0) && (pressureData[0] != 0.0)) {
-      pressureTrend = 1;
+      pressureTrend = Weather::rising;
     } else if ((pressureData[0] - pressureData[35] <= -1 * pressureDifference) && (pressureData[35] != 0.0) && (pressureData[0] != 0.0)) {
-      pressureTrend = 2;
+      pressureTrend = Weather::falling;
     } else {
-      pressureTrend = 3;
+      pressureTrend = Weather::steady;
     }
 
     ThingSpeak.setField(1, (float)temperature);
@@ -267,8 +281,8 @@ void loop() {
     ThingSpeak.setField(6, (float)UVindex);
     ThingSpeak.setField(7, (float)lightIntensity);
     ThingSpeak.setField(8, (float)AQI);
-    ThingSpeak.setStatus(String(weather.getForecast(seaLevelPressure, month, Weather::NOW, pressureTrend)));      //Weather::NOW is accessing WindDirection map inside WeatherCalculations library
-                                                                                                                  //NOW is abbreviation from "NO Wind"
+    ThingSpeak.setStatus(String(weather.getForecast(seaLevelPressure, month, Weather::NOW, pressureTrend)));  //Weather::NOW is accessing WindDirection map inside WeatherCalculations library
+                                                                                                              //NOW is abbreviation from "NO Wind"
     ThingSpeak.writeFields(channelID, APIkey);
 
     five_minute_jobs = millis();
