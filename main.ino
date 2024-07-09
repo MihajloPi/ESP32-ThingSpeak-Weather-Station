@@ -291,11 +291,11 @@ void loop() {
 
 void WiFiEvent(WiFiEvent_t event) {
   switch (event) {
-    case SYSTEM_EVENT_STA_DISCONNECTED:
+    case WIFI_EVENT_STA_DISCONNECTED:
       wifiOnDisconnect();
       break;
-    case SYSTEM_EVENT_STA_CONNECTED:
-      WiFi.enableIpV6();  //Enable IPv6 support for ESP32
+    case WIFI_EVENT_STA_CONNECTED:
+      WiFi.enableIPv6();  //Enable IPv6 support for ESP32
       break;
     default:
       break;
